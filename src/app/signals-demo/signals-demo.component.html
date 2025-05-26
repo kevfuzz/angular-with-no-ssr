@@ -1,0 +1,25 @@
+<div>
+  <h2>Writable Signal: Counter</h2>
+  <p>
+    This example demonstrates a writable signal called <code>counter</code>.
+    It is initialized to 0 and can be updated directly.
+  </p>
+  <p>Current counter value: {{ counter() }}</p>
+
+  <h2>Computed Signal: Double Counter</h2>
+  <p>
+    This example demonstrates a computed signal called <code>doubleCounter</code>.
+    Its value is derived from the <code>counter</code> signal and automatically updates
+    when <code>counter</code> changes. It always displays the double of the counter's current value.
+  </p>
+  <p>Current doubleCounter value: {{ doubleCounter() }}</p>
+
+  <h2>Effect: Log Counter Changes</h2>
+  <p>
+    This example demonstrates an effect that listens to changes in the <code>counter</code> signal.
+    Whenever the <code>counter</code> value changes, a message is logged to the browser's console.
+    Open your browser's developer console to see the logs.
+  </p>
+
+  <button (click)="increment()">Increment Counter</button>
+</div>
