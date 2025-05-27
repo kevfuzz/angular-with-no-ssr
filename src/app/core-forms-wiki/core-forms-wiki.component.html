@@ -1,0 +1,135 @@
+<h2>Angular Core Forms</h2>
+<p>This section will cover template-driven and reactive forms.</p>
+
+<h3>Template-Driven Form Example</h3>
+<form #tdForm="ngForm" (ngSubmit)="onTemplateSubmit(tdForm.value)">
+  <div>
+    <label for="name-td">Name:</label>
+    <input type="text" id="name-td" name="name" ngModel required>
+  </div>
+  <div>
+    <label for="email-td">Email:</label>
+    <input type="email" id="email-td" name="email" ngModel required email>
+  </div>
+  <button type="submit" [disabled]="tdForm.invalid">Submit</button>
+</form>
+<div *ngIf="tdForm.submitted && tdForm.value.name">
+  <h4>Submitted Data:</h4>
+  <pre>{{ tdForm.value | json }}</pre>
+</div>
+
+<hr> <!-- Add a horizontal line for separation -->
+
+<h3>Reactive Form Example</h3>
+<form [formGroup]="reactiveForm" (ngSubmit)="onReactiveSubmit()">
+  <div>
+    <label for="name-rf">Name:</label>
+    <input type="text" id="name-rf" formControlName="name">
+    <div *ngIf="reactiveName?.invalid && (reactiveName?.dirty || reactiveName?.touched)" style="color: red;">
+      <small *ngIf="reactiveName?.errors?.['required']">Name is required.</small>
+    </div>
+  </div>
+
+  <div>
+    <label for="email-rf">Email:</label>
+    <input type="email" id="email-rf" formControlName="email">
+    <div *ngIf="reactiveEmail?.invalid && (reactiveEmail?.dirty || reactiveEmail?.touched)" style="color: red;">
+      <small *ngIf="reactiveEmail?.errors?.['required']">Email is required.</small>
+      <small *ngIf="reactiveEmail?.errors?.['email']">Please enter a valid email.</small>
+    </div>
+  </div>
+
+  <button type="submit" [disabled]="reactiveForm.invalid">Submit Reactive Form</button>
+</form>
+
+<h4>Reactive Form Value:</h4>
+<pre>{{ reactiveForm.value | json }}</pre>
+
+<h4>Reactive Form Status:</h4>
+<pre>{{ reactiveForm.status | json }}</pre>
+
+<hr>
+<h3>Advanced Reactive Form - Input Types & Custom Sync Validator</h3>
+<form [formGroup]="advancedReactiveForm" (ngSubmit)="onAdvancedReactiveSubmit()">
+  <div>
+    <label for="age-rf">Age:</label>
+    <input type="number" id="age-rf" formControlName="age">
+    <div *ngIf="ageControl?.invalid && (ageControl?.dirty || ageControl?.touched)" style="color: red;">
+      <small *ngIf="ageControl?.errors?.['required']">Age is required.</small>
+      <small *ngIf="ageControl?.errors?.['min']">Must be at least 18.</small>
+    </div>
+  </div>
+
+  <div>
+    <label for="subscribe-rf">
+      <input type="checkbox" id="subscribe-rf" formControlName="subscribeToNewsletter">
+      Subscribe to newsletter
+    </label>
+  </div>
+
+  <div>
+    <label for="country-rf">Country:</label>
+    <select id="country-rf" formControlName="country">
+      <option value="">Select a country</option>
+      <option value="us">United States</option>
+      <option value="ca">Canada</option>
+      <option value="gb">United Kingdom</option>
+    </select>
+    <div *ngIf="countryControl?.invalid && (countryControl?.dirty || countryControl?.touched)" style="color: red;">
+      <small *ngIf="countryControl?.errors?.['required']">Country is required.</small>
+    </div>
+  </div>
+
+  <div>
+    <label for="custom-validation-rf">Custom Validator Input (cannot be 'forbiddenName'):</label>
+    <input type="text" id="custom-validation-rf" formControlName="customValidationInput">
+    <div *ngIf="customValidationInputControl?.invalid && (customValidationInputControl?.dirty || customValidationInputControl?.touched)" style="color: red;">
+      <small *ngIf="customValidationInputControl?.errors?.['required']">Field is required.</small>
+      <small *ngIf="customValidationInputControl?.errors?.['nameIsForbidden']">The name 'forbiddenName' is not allowed.</small>
+    </div>
+  </div>
+
+  <button type="submit" [disabled]="advancedReactiveForm.invalid">Submit Advanced Form</button>
+</form>
+
+<h4>Advanced Reactive Form Value:</h4>
+<pre>{{ advancedReactiveForm.value | json }}</pre>
+
+<h4>Advanced Reactive Form Status:</h4>
+<pre>{{ advancedReactiveForm.status | json }}</pre>
+
+  <div>
+    <label for="username-rf">Username (async validation - cannot be 'testuser', 'admin', 'user123'):</label>
+    <input type="text" id="username-rf" formControlName="username">
+    <div *ngIf="usernameControl?.pending">
+      <small>Checking username...</small>
+    </div>
+    <div *ngIf="usernameControl?.invalid && (usernameControl?.dirty || usernameControl?.touched) && !usernameControl?.pending" style="color: red;">
+      <small *ngIf="usernameControl?.errors?.['required']">Username is required.</small>
+      <small *ngIf="usernameControl?.errors?.['usernameTaken']">This username is already taken.</small>
+    </div>
+  </div>
+
+  <div>
+    <label for="allow-extra-info-rf">
+      <input type="checkbox" id="allow-extra-info-rf" formControlName="allowExtraInfo">
+      Allow extra information
+    </label>
+  </div>
+
+  <div>
+    <label for="extra-info-rf">Extra Information:</label>
+    <input type="text" id="extra-info-rf" formControlName="extraInfo">
+    <!-- No validation messages needed here as it's optional and enabled/disabled -->
+  </div>
+</form>
+
+<h4>Advanced Reactive Form Value:</h4>
+<pre>{{ advancedReactiveForm.value | json }}</pre>
+
+<h4>Advanced Reactive Form Status:</h4>
+<pre>{{ advancedReactiveForm.status | json }}</pre>
+
+<hr>
+<h3>Next Section:</h3>
+<p><a routerLink="/wiki/forms/formly">Learn about Formly Integration</a></p>

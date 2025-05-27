@@ -1,0 +1,486 @@
+<h2>Testing in Angular</h2>
+<p>This section covers various aspects of testing Angular applications, including unit, integration, and end-to-end testing.</p>
+
+<h3>Why Test Your Application?</h3>
+<p>Writing tests for your Angular application offers several benefits:</p>
+<ul>
+  <li><strong>Increased Confidence:</strong> Ensures your code behaves as expected and new changes don't break existing functionality.</li>
+  <li><strong>Regression Prevention:</strong> Catches bugs introduced by recent code modifications.</li>
+  <li><strong>Improved Code Quality & Design:</strong> Writing testable code often leads to better-architected, more modular components and services.</li>
+  <li><strong>Living Documentation:</strong> Tests can serve as examples of how your code is intended to be used.</li>
+</ul>
+
+<h3>Types of Tests in Angular</h3>
+<table border="1" style="width:100%; border-collapse: collapse; margin-bottom: 1em;">
+  <thead>
+    <tr>
+      <th style="padding: 5px; text-align: left;">Test Type</th>
+      <th style="padding: 5px; text-align: left;">Scope</th>
+      <th style="padding: 5px; text-align: left;">Speed</th>
+      <th style="padding: 5px; text-align: left;">Tools Often Used</th>
+      <th style="padding: 5px; text-align: left;">Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 5px;"><strong>Unit Tests</strong></td>
+      <td style="padding: 5px;">Individual classes, methods, components (isolated logic), services, pipes.</td>
+      <td style="padding: 5px;">Fast</td>
+      <td style="padding: 5px;">Jasmine, Karma, TestBed</td>
+      <td style="padding: 5px;">Verify correctness of smallest code units.</td>
+    </tr>
+    <tr>
+      <td style="padding: 5px;"><strong>Integration Tests</strong></td>
+      <td style="padding: 5px;">Component with its template, interaction between components, directives, pipes.</td>
+      <td style="padding: 5px;">Medium</td>
+      <td style="padding: 5px;">Jasmine, Karma, TestBed</td>
+      <td style="padding: 5px;">Verify that different parts work together correctly.</td>
+    </tr>
+    <tr>
+      <td style="padding: 5px;"><strong>End-to-End (E2E) Tests</strong></td>
+      <td style="padding: 5px;">Entire application flow from the user's perspective.</td>
+      <td style="padding: 5px;">Slow</td>
+      <td style="padding: 5px;">Protractor (legacy), Cypress, Playwright, WebDriverIO</td>
+      <td style="padding: 5px;">Verify user scenarios and overall application behavior.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Unit Testing in Angular</h3>
+<p>Unit tests focus on the smallest parts of your application in isolation.</p>
+<h4>Key Tools & Concepts:</h4>
+<ul>
+  <li><strong>Jasmine:</strong> A behavior-driven development framework for testing JavaScript code. It provides functions like <code>describe()</code>, <code>it()</code> (or <code>specify()</code>), <code>expect()</code>, <code>beforeEach()</code>, <code>afterEach()</code>, spies (<code>spyOn()</code>), etc.</li>
+  <li><strong>Karma:</strong> A test runner that executes your Jasmine tests in a browser environment. It watches files for changes and re-runs tests.</li>
+  <li><strong>Angular Testing Utilities (<code>@angular/core/testing</code>):</strong>
+    <ul>
+      <li><code>TestBed</code>: The primary Angular utility for setting up testing modules and components. It allows you to create an Angular environment for the unit under test.</li>
+      <li><code>ComponentFixture</code>: A handle on an instance of a tested component, providing access to the component instance, its DOM element, and its <code>DebugElement</code>.</li>
+      <li><code>async</code>, <code>fakeAsync</code>, <code>tick</code>: Utilities for testing asynchronous code.</li>
+    </ul>
+  </li>
+</ul>
+
+<h4>Basic Component Test Structure (Conceptual)</h4>
+<p>Angular CLI generates a basic <code>.spec.ts</code> file when you create a component. Here's a conceptual look at its structure:</p>
+<pre><code>
+// my-component.component.spec.ts
+import {{ '{' }} ComponentFixture, TestBed } from '@angular/core/testing';
+import {{ '{' }} MyComponent } from './my-component.component'; // The component to test
+
+describe('MyComponent', () => {{'{'}} // Test suite for MyComponent
+  let component: MyComponent;
+  let fixture: ComponentFixture&lt;MyComponent&gt;;
+
+  beforeEach(async () => {{'{'}} // Setup block run before each test
+    // Configure the testing module, similar to an @NgModule
+    await TestBed.configureTestingModule({{'{'}}
+      imports: [MyComponent] // For standalone components
+      // declarations: [MyComponent] // For non-standalone, also import any dependent modules/components
+    }).compileComponents(); // Compile component's template and CSS
+
+    // Create an instance of the component and its test environment
+    fixture = TestBed.createComponent(MyComponent);
+    component = fixture.componentInstance; // The actual component instance
+    fixture.detectChanges(); // Trigger initial data binding and lifecycle hooks (like ngOnInit)
+  });
+
+  it('should create the component', () => {{'{'}} // Individual test case
+    expect(component).toBeTruthy(); // Assertion: check if the component instance exists
+  });
+
+  it('should have a default title', () => {{'{'}}
+    // Assuming MyComponent has a title property
+    // expect(component.title).toEqual('Default Title');
+  });
+
+  it('should render the title in an h1 tag', () => {{'{'}}
+    // const compiled = fixture.nativeElement as HTMLElement;
+    // expect(compiled.querySelector('h1')?.textContent).toContain('Default Title');
+  });
+});
+</code></pre>
+<p>This example shows the basic setup. Subsequent sections will delve into testing component properties, methods, template rendering, event handling, and interaction with services.</p>
+
+<h4>Testing Component Properties and Methods</h4>
+<p>You can directly access public properties and call public methods of your component instance within your tests.</p>
+<pre><code>
+// In a describe block for MyComponent...
+it('should have an initial message property', () => {{'{'}}
+  expect(component.message).toBe('Hello World'); // Assuming 'message' is a public property
+});
+
+it('should update the message when updateMessage() is called', () => {{'{'}}
+  component.updateMessage('New Message'); // Call a public method
+  expect(component.message).toBe('New Message');
+});
+</code></pre>
+
+<h4>Testing Component Template Rendering</h4>
+<p>To test what your component renders, you can inspect the DOM. The <code>fixture.nativeElement</code> gives you direct access to the component's root DOM element. For more complex queries or Angular-specific attributes, <code>fixture.debugElement.query(By.css('.my-class'))</code> can be used.</p>
+<pre><code>
+// import {{ '{' }} By } from '@angular/platform-browser'; // Add this import for By.css
+
+// In a describe block for MyComponent...
+it('should render the message property in a &lt;p&gt; tag', () => {{'{'}}
+  component.message = 'Test Message Display';
+  fixture.detectChanges(); // Important: trigger change detection to update the DOM
+  const compiled = fixture.nativeElement as HTMLElement;
+  expect(compiled.querySelector('p')?.textContent).toContain('Test Message Display');
+});
+
+it('should apply a specific class based on a condition', () => {{'{'}}
+  component.isSpecial = true;
+  fixture.detectChanges();
+  const pElement = fixture.debugElement.query(By.css('p')); // Using DebugElement and By
+  expect(pElement.classes['special-paragraph']).toBeTrue(); // Check for CSS class
+});
+</code></pre>
+<p>Remember to call <code>fixture.detectChanges()</code> after changing component properties to ensure the template reflects these changes before you make DOM assertions.</p>
+
+<h4>Testing Component Event Handling (e.g., button clicks)</h4>
+<p>You can simulate DOM events or trigger event handlers directly. Spies (from Jasmine) are useful to verify if methods are called upon events.</p>
+<pre><code>
+// import {{ '{' }} By } from '@angular/platform-browser'; // Ensure By is imported
+
+// In a describe block for MyComponent...
+it('should call onButtonClick method when the button is clicked', () => {{'{'}}
+  spyOn(component, 'onButtonClick'); // Spy on the method
+
+  // const button = fixture.nativeElement.querySelector('button');
+  // button.click(); // Simulate a click
+
+  // OR, if the button has a template ref or easy selector:
+  const buttonElement = fixture.debugElement.query(By.css('#myButton'));
+  buttonElement.triggerEventHandler('click', null); // Preferred way to trigger event handlers
+
+  expect(component.onButtonClick).toHaveBeenCalled();
+});
+
+it('should update a property after button click logic', () => {{'{'}}
+  // Assume onButtonClick changes a property 'clickHandled' to true
+  const buttonElement = fixture.debugElement.query(By.css('#myButton'));
+  buttonElement.triggerEventHandler('click', null);
+  fixture.detectChanges(); // If the method changes a property that affects the template
+
+  expect(component.clickHandled).toBeTrue();
+});
+</code></pre>
+
+<h4>Testing Component Inputs (@Input())</h4>
+<p>You can set <code>@Input()</code> properties directly on the component instance and then run <code>fixture.detectChanges()</code> to simulate the parent component passing data.</p>
+<pre><code>
+// In a describe block for MyInputOutputComponent...
+it('should display the input message', () => {{'{'}}
+  component.inputMessage = 'Message from Test'; // Set the @Input() property
+  fixture.detectChanges(); // Trigger change detection
+  const compiled = fixture.nativeElement as HTMLElement;
+  expect(compiled.querySelector('.input-display')?.textContent).toContain('Message from Test');
+});
+</code></pre>
+
+<h4>Testing Component Outputs (@Output() with EventEmitter)</h4>
+<p>To test <code>@Output()</code> properties, you subscribe to the <code>EventEmitter</code> instance on the component and then trigger the action that causes the event to be emitted. Use a spy on the event emitter's <code>emit</code> method for more direct testing.</p>
+<pre><code>
+// import {{ '{' }} By } from '@angular/platform-browser'; // Ensure By is imported
+
+// In a describe block for MyInputOutputComponent...
+it('should emit customEvent when an action occurs', (done) => {{'{'}} // Use 'done' for async test
+  let emittedValue: string | undefined;
+  component.customEvent.subscribe((value: string) => {{'{'}}
+    emittedValue = value;
+    done(); // Signal Jasmine that the async test is complete
+  });
+
+  component.triggerCustomEvent('Test Event Payload'); // Call method that emits
+
+  expect(emittedValue).toBe('Test Event Payload');
+});
+
+it('should emit an event using spyOn and triggerEventHandler (e.g., button click)', () => {{'{'}}
+  spyOn(component.customEvent, 'emit'); // Spy on the EventEmitter's emit method
+
+  const actionButton = fixture.debugElement.query(By.css('.emit-event-button'));
+  actionButton.triggerEventHandler('click', null); // Assume this button click calls the method that emits
+
+  expect(component.customEvent.emit).toHaveBeenCalledWith('Expected Payload');
+});
+</code></pre>
+<p>These examples provide a foundation for testing various aspects of your Angular components. Testing services, pipes, and more advanced scenarios like routing and asynchronous operations will be covered next.</p>
+
+<hr>
+<h4>Testing Angular Services</h4>
+<p>Services often contain business logic, API call handling, or shared utility functions. Testing them is crucial.</p>
+
+<h5>1. Simple Services (No Dependencies)</h5>
+<p>If a service has no dependencies, you can often test it like any other TypeScript class by directly instantiating it.</p>
+<pre><code>
+// simple-logger.service.ts
+// @Injectable({{ '{' }} providedIn: 'root' })
+// export class SimpleLoggerService {{ '{' }}
+//   logs: string[] = [];
+//   log(message: string) {{ '{' }} this.logs.push(message); console.log(message); }
+// }
+
+// simple-logger.service.spec.ts
+import {{ '{' }} SimpleLoggerService } from './simple-logger.service';
+
+describe('SimpleLoggerService (isolated)', () => {{'{'}}
+  let service: SimpleLoggerService;
+
+  beforeEach(() => {{'{'}}
+    service = new SimpleLoggerService();
+  });
+
+  it('should be created', () => {{'{'}}
+    expect(service).toBeTruthy();
+  });
+
+  it('should add a message to logs when log() is called', () => {{'{'}}
+    service.log('Test message');
+    expect(service.logs).toContain('Test message');
+    expect(service.logs.length).toBe(1);
+  });
+});
+</code></pre>
+
+<h5>2. Services with Dependencies</h5>
+<p>For services with dependencies, use <code>TestBed.inject()</code> to get an instance of the service and its dependencies. You might also need to provide mock implementations for its dependencies.</p>
+<pre><code>
+// value.service.ts (conceptual dependency)
+// @Injectable({{ '{' }} providedIn: 'root' })
+// export class ValueService {{ '{' }} getValue() {{ '{' }} return 'real value'; } }
+
+// master.service.ts (service under test)
+// @Injectable({{ '{' }} providedIn: 'root' })
+// export class MasterService {{ '{' }}
+//   constructor(private valueService: ValueService) {{ '{' }} }
+//   getCalculatedValue() {{ '{' }} return `Master: ${{'{'}}this.valueService.getValue()}`; }
+// }
+
+// master.service.spec.ts
+import {{ '{' }} TestBed } from '@angular/core/testing';
+import {{ '{' }} MasterService } from './master.service';
+import {{ '{' }} ValueService } from './value.service'; // The dependency
+
+describe('MasterService (with TestBed)', () => {{'{'}}
+  let masterService: MasterService;
+  let valueServiceSpy: jasmine.SpyObj&lt;ValueService&gt;;
+
+  beforeEach(() => {{'{'}}
+    // Create a spy object for ValueService
+    const spy = jasmine.createSpyObj('ValueService', ['getValue']);
+
+    TestBed.configureTestingModule({{'{'}}
+      // Provide the service-under-test and its (mocked) dependencies
+      providers: [
+        MasterService,
+        {{ '{' }} provide: ValueService, useValue: spy } // Use the spy object for ValueService
+      ]
+    });
+    masterService = TestBed.inject(MasterService);
+    valueServiceSpy = TestBed.inject(ValueService) as jasmine.SpyObj&lt;ValueService&gt;;
+  });
+
+  it('should be created', () => {{'{'}}
+    expect(masterService).toBeTruthy();
+  });
+
+  it('#getCalculatedValue should return value from spy and prefix it', () => {{'{'}}
+    const stubValue = 'stub value';
+    valueServiceSpy.getValue.and.returnValue(stubValue); // Configure spy to return a stub value
+
+    expect(masterService.getCalculatedValue()).toBe(`Master: ${{'{'}}stubValue}`);
+    expect(valueServiceSpy.getValue.calls.count()).toBe(1, 'spy method was called once');
+    expect(valueServiceSpy.getValue.calls.mostRecent().returnValue).toBe(stubValue);
+  });
+});
+</code></pre>
+<p>Using <code>TestBed.inject()</code> ensures that the Angular dependency injection system is used, which is important for services that might have <code>providedIn: 'root'</code> or are part of a module's providers array.</p>
+
+<hr>
+<h4>Testing Angular Pipes</h4>
+<p>Pipes transform input values to an output value for display in templates. Pure pipes are easiest to test.</p>
+
+<h5>1. Pure Pipes</h5>
+<p>A pure pipe's <code>transform</code> method is only called when its input arguments change. You can test them by creating an instance of the pipe and calling its <code>transform</code> method directly.</p>
+<pre><code>
+// my-custom.pipe.ts
+// @Pipe({{ '{' }} name: 'myCustom', standalone: true })
+// export class MyCustomPipe implements PipeTransform {{ '{' }}
+//   transform(value: string, suffix: string = '!'): string {{'{'}}
+//     if (!value) return '';
+//     return value.toUpperCase() + suffix;
+//   }
+// }
+
+// my-custom.pipe.spec.ts
+import {{ '{' }} MyCustomPipe } from './my-custom.pipe';
+
+describe('MyCustomPipe', () => {{'{'}}
+  let pipe: MyCustomPipe;
+
+  beforeEach(() => {{'{'}}
+    pipe = new MyCustomPipe();
+  });
+
+  it('create an instance', () => {{'{'}}
+    expect(pipe).toBeTruthy();
+  });
+
+  it('should transform "hello" to "HELLO!"', () => {{'{'}}
+    expect(pipe.transform('hello')).toBe('HELLO!');
+  });
+
+  it('should transform "world" with custom suffix to "WORLD#"', () => {{'{'}}
+    expect(pipe.transform('world', '#')).toBe('WORLD#');
+  });
+
+  it('should return empty string for null or undefined input', () => {{'{'}}
+    expect(pipe.transform(null as any)).toBe('');
+    expect(pipe.transform(undefined as any)).toBe('');
+  });
+});
+</code></pre>
+
+<h5>2. Impure Pipes (Brief Mention)</h5>
+<p>Impure pipes (marked with <code>pure: false</code> in <code>@Pipe</code> decorator) run on every change detection cycle. Testing their <code>transform</code> method is similar, but you might need to consider their stateful behavior or external dependencies if any.</p>
+
+<hr>
+<h4>Mocking Dependencies in Tests</h4>
+<p>Mocking is essential for isolating the unit under test. It involves replacing real dependencies with test doubles (fakes, stubs, spies).</p>
+<ul>
+  <li><strong>Fakes:</strong> Working implementations, but simpler than the real thing (e.g., an in-memory version of a local storage service).</li>
+  <li><strong>Stubs:</strong> Objects that return predefined data for specific method calls, without any other logic. Often created with <code>{{'{' }} provide: ServiceName, useValue: {{'{'}} method: () => 'stub data' } }</code>.</li>
+  <li><strong>Spies (Jasmine):</strong> <code>jasmine.createSpyObj('ServiceName', ['method1', 'method2'])</code> creates an object with spy methods. Spies track how methods are called (e.g., number of calls, arguments) and allow you to control their return values (<code>and.returnValue()</code>, <code>and.callFake()</code>). This is demonstrated in the "Services with Dependencies" example above.</li>
+</ul>
+<p>When providing mocks in <code>TestBed</code>:</p>
+<pre><code>
+TestBed.configureTestingModule({{'{'}}
+  providers: [
+    MyServiceUnderTest,
+    // Using useValue for a simple stub
+    {{ '{' }} provide: DependencyA, useValue: {{ '{' }} getData: () => of('mock data A') } },
+    // Using useClass for a fake implementation
+    {{ '{' }} provide: DependencyB, useClass: FakeDependencyB },
+    // Using a Jasmine spy object (created earlier)
+    {{ '{' }} provide: DependencyC, useValue: dependencyCSpy }
+  ]
+});
+</code></pre>
+<p>Effective mocking helps ensure your unit tests are fast, reliable, and truly test the unit in isolation.</p>
+
+<hr>
+<h3>Integration Testing in Angular</h3>
+<p>While unit tests focus on individual components or services in isolation, integration tests verify how different parts of your application work together. In Angular, this often means testing how a parent component interacts with its child components, or how a component interacts with its template and related directives and pipes when they are all working together.</p>
+<h4>Key Differences from Component Unit Tests:</h4>
+<ul>
+  <li><strong>Scope:</strong> Instead of mocking all child components or dependencies, you might allow some real child components or services to be part of the test setup to see their interaction.</li>
+  <li><strong>Setup (<code>TestBed</code>):</strong> You might declare multiple related components in <code>TestBed.configureTestingModule</code>'s `declarations` (for non-standalone) or `imports` (for standalone components).</li>
+  <li><strong>Focus:</strong> The focus is on the contract between components (e.g., data passing via <code>@Input</code>/<code>@Output</code>, content projection) and the component's interaction with its fully rendered template containing other directives or pipes.</li>
+</ul>
+<h4>Example: Parent-Child Interaction</h4>
+<p>Consider a parent component that passes an input to a child and listens to an output from it.</p>
+<pre><code>
+// import {{ '{' }} ComponentFixture, TestBed } from '@angular/core/testing';
+// import {{ '{' }} ParentComponent } from './parent.component';
+// import {{ '{' }} ChildComponent } from './child.component';
+// import {{ '{' }} By } from '@angular/platform-browser'; // For By.directive or By.css
+
+// Conceptual: Testing Parent-Child interaction
+// Assume ParentComponent uses ChildComponent in its template:
+// &lt;app-child [data]="parentData" (notify)="handleChildNotification($event)"&gt;&lt;/app-child&gt;
+
+describe('ParentComponent with ChildComponent (Integration)', () => {{'{'}}
+  let parentFixture: ComponentFixture&lt;ParentComponent&gt;;
+  let parentComponent: ParentComponent;
+  // let childDebugElement: DebugElement; // To access child component instance if needed
+
+  beforeEach(async () => {{'{'}}
+    await TestBed.configureTestingModule({{'{'}}
+      imports: [ParentComponent, ChildComponent] // For standalone
+      // declarations: [ParentComponent, ChildComponent] // For non-standalone
+    }).compileComponents();
+
+    parentFixture = TestBed.createComponent(ParentComponent);
+    parentComponent = parentFixture.componentInstance;
+    // childDebugElement = parentFixture.debugElement.query(By.directive(ChildComponent));
+    parentFixture.detectChanges();
+  });
+
+  it('should pass data to child component via @Input', () => {{'{'}}
+    parentComponent.parentData = 'Test Data for Child';
+    parentFixture.detectChanges();
+    // const childInstance = childDebugElement.componentInstance;
+    // expect(childInstance.data).toBe('Test Data for Child');
+    // Or, verify child's template if it displays the data:
+    // const childHtmlElement = childDebugElement.nativeElement as HTMLElement;
+    // expect(childHtmlElement.textContent).toContain('Test Data for Child');
+  });
+
+  it('should handle customEvent emitted by child component via @Output', () => {{'{'}}
+    spyOn(parentComponent, 'handleChildNotification');
+    // const childInstance = childDebugElement.componentInstance;
+    // childInstance.notify.emit('Notification from child in test'); // Directly emit from child
+
+    // Or, trigger action in child that causes emit, then detectChanges if parent reacts
+    // const buttonInChild = childDebugElement.query(By.css('button'));
+    // buttonInChild.triggerEventHandler('click', null);
+
+    parentFixture.detectChanges(); // If parent's handler updates parent's view
+    // expect(parentComponent.handleChildNotification).toHaveBeenCalledWith('Notification from child in test');
+  });
+});
+</code></pre>
+<p>Integration tests are a step up from unit tests and help ensure that components are wired together correctly. They are generally slower than unit tests but faster than E2E tests.</p>
+
+<hr>
+<h3>End-to-End (E2E) Testing in Angular</h3>
+<p>End-to-End (E2E) tests validate the entire application flow from the user's perspective. They simulate real user scenarios by interacting with the application through the UI in a browser.</p>
+<h4>Key Characteristics:</h4>
+<ul>
+  <li><strong>Scope:</strong> Tests the whole application stack, including frontend, backend (often mocked or a test instance), and interactions between them.</li>
+  <li><strong>User Perspective:</strong> Focuses on user workflows like navigating through pages, submitting forms, and verifying that the UI displays correctly in response to actions.</li>
+  <li><strong>Slower and More Brittle:</strong> E2E tests are the slowest type of test and can be more prone to breaking due to UI changes. They are typically run less frequently than unit or integration tests.</li>
+</ul>
+
+<h4>Common E2E Testing Tools for Angular:</h4>
+<ul>
+  <li><strong>Protractor (Legacy):</strong> Was the default E2E testing framework for Angular CLI projects. It's built on top of WebDriver. (Note: Protractor is deprecated).</li>
+  <li><strong>Cypress:</strong> A popular, modern E2E testing framework known for its speed, reliability, and developer experience. It runs directly in the browser.</li>
+  <li><strong>Playwright:</strong> Developed by Microsoft, Playwright enables reliable E2E testing for modern web apps across all modern browsers.</li>
+  <li><strong>WebDriverIO:</strong> Another flexible and powerful E2E testing framework that uses the WebDriver protocol.</li>
+</ul>
+<p>Angular CLI no longer includes Protractor by default for new projects. Teams are encouraged to choose from other modern E2E testing tools.</p>
+
+<h4>Conceptual E2E Test Example (Syntax will vary by tool, e.g., Cypress-like):</h4>
+<pre><code>
+// e2e/app.e2e-spec.ts (Conceptual - Cypress-like syntax)
+describe('My Angular App E2E', () => {{'{'}}
+  beforeEach(() => {{'{'}}
+    // Visit the home page before each test
+    cy.visit('/');
+  });
+
+  it('should display the welcome message', () => {{'{'}}
+    cy.get('app-root h1').should('contain.text', 'Welcome to My App!');
+  });
+
+  it('should navigate to the about page when about link is clicked', () => {{'{'}}
+    cy.get('nav a[href="/about"]').click();
+    cy.url().should('include', '/about');
+    cy.get('app-about h2').should('contain.text', 'About Us');
+  });
+
+  it('should allow user to fill and submit a login form', () => {{'{'}}
+    cy.visit('/login');
+    cy.get('input[formControlName="username"]').type('testuser');
+    cy.get('input[formControlName="password"]').type('password123');
+    cy.get('button[type="submit"]').click();
+    // Add assertions for successful login, e.g., redirect to dashboard, display user name
+    cy.url().should('include', '/dashboard');
+    cy.get('.user-greeting').should('contain.text', 'Hello, testuser');
+  });
+});
+</code></pre>
+<p>E2E tests provide the highest level of confidence that your application is working correctly from a user's point of view, but they should be used judiciously due to their cost in terms of execution time and maintenance.</p>

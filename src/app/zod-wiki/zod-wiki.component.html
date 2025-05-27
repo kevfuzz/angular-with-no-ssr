@@ -1,0 +1,98 @@
+<h2>Zod Integration for Validation</h2>
+<p>This section will demonstrate how to use Zod for schema validation in Angular forms.</p>
+
+<h3>Setting up Zod</h3>
+<p>Zod is a TypeScript-first schema declaration and validation library. To use it, you first need to install it:</p>
+<pre><code>npm install zod</code></pre>
+<p>After installation, you can import it into your TypeScript files:</p>
+<pre><code>import * as z from 'zod'; // Or: import { z } from 'zod';</code></pre>
+
+<h3>Creating a Basic Zod Schema</h3>
+<p>You define a schema by chaining Zod's validation methods.</p>
+<pre><code>
+const UserSchema = z.object({{'{'}}
+  username: z.string().min(3, {{'{'}} message: "Username must be at least 3 characters long" }),
+  email: z.string().email({{'{'}} message: "Invalid email address" }),
+  age: z.number().min(18, {{'{'}} message: "Must be 18 or older" }).optional(),
+  isAdmin: z.boolean().default(false)
+});
+
+// You can infer the TypeScript type from the schema:
+// type User = z.infer<typeof UserSchema>;
+</code></pre>
+<p>This component will demonstrate how to use such schemas with Angular Reactive Forms and potentially with Formly.</p>
+
+<hr>
+<h3>Angular Reactive Form with Zod Validation</h3>
+<p>
+  The form below uses a Zod schema (defined in the component) to validate its fields.
+  The validation is triggered on submit. Zod error messages are then displayed next to each field.
+</p>
+
+<form [formGroup]="reactiveForm" (ngSubmit)="onSubmit()">
+  <div>
+    <label for="username-zod">Username:</label>
+    <input id="username-zod" formControlName="username">
+    <div *ngIf="usernameControl?.errors?.['zod'] && (usernameControl?.touched || usernameControl?.dirty)" style="color: red;">
+      <small>{{ usernameControl?.errors?.['zod'] }}</small>
+    </div>
+  </div>
+
+  <div>
+    <label for="email-zod">Email:</label>
+    <input id="email-zod" type="email" formControlName="email">
+    <div *ngIf="emailControl?.errors?.['zod'] && (emailControl?.touched || emailControl?.dirty)" style="color: red;">
+      <small>{{ emailControl?.errors?.['zod'] }}</small>
+    </div>
+  </div>
+
+  <div>
+    <label for="age-zod">Age (Optional, >=18):</label>
+    <input id="age-zod" type="number" formControlName="age">
+    <div *ngIf="ageControl?.errors?.['zod'] && (ageControl?.touched || ageControl?.dirty)" style="color: red;">
+      <small>{{ ageControl?.errors?.['zod'] }}</small>
+    </div>
+  </div>
+  
+  <div>
+    <label for="bio-zod">Bio (Optional, max 100 chars):</label>
+    <textarea id="bio-zod" formControlName="bio"></textarea>
+    <div *ngIf="bioControl?.errors?.['zod'] && (bioControl?.touched || bioControl?.dirty)" style="color: red;">
+      <small>{{ bioControl?.errors?.['zod'] }}</small>
+    </div>
+  </div>
+
+  <div *ngIf="reactiveForm.errors?.['zodForm']" style="color: red; margin-top: 10px;">
+    <small>Form level error: {{ reactiveForm.errors?.['zodForm'] }}</small>
+  </div>
+
+  <button type="submit">Submit Zod Validated Form</button>
+</form>
+
+<h4>Form Value:</h4>
+<pre>{{ reactiveForm.value | json }}</pre>
+
+<h4>Form Errors:</h4>
+<pre>{{ reactiveForm.errors | json }}</pre>
+
+<hr>
+<h3>Formly Form with Zod Validation (Submit-time)</h3>
+<p>
+  This Formly form's fields are generated based on the same Zod schema (<code>UserSchema</code>).
+  Validation using Zod is performed when the form is submitted.
+</p>
+<p><small>
+  Validation errors for this Formly example are shown in the console and via an alert on submit.
+  Integrating Zod errors directly into Formly's per-field error messages requires more advanced setup
+  (e.g., custom Formly validators, wrappers, or extensions that can bridge Zod's error object with Formly's field state).
+  The <code>mapZodToFormlyFields</code> utility in this component provides a basic mapping of Zod schema properties (like 'required' or 'minLength')
+  and some error messages to Formly's field configuration.
+</small></p>
+
+<form [formGroup]="formlyForm" (ngSubmit)="onFormlySubmit()">
+  <formly-form [form]="formlyForm" [fields]="formlyFields" [model]="formlyModel"></formly-form>
+  <button type="submit">Submit Formly + Zod Form</button>
+</form>
+
+<h4>Formly Model:</h4>
+<pre>{{ formlyModel | json }}</pre>

@@ -1,0 +1,131 @@
+<h2>Angular Change Detection</h2>
+<p>This section explains how Angular detects changes and updates the view, and how you can optimize this process.</p>
+
+<h3>What is Change Detection?</h3>
+<p>Change detection is the mechanism by which Angular synchronizes the state of your application data (the model) with what's displayed in the user interface (the view). When your application data changes, Angular needs to re-render the relevant parts of the view to reflect these changes.</p>
+<p>The primary goal of change detection is to ensure that the DOM accurately reflects the current state of the component data.</p>
+
+<h3>How Angular Detects Changes (The Default Strategy)</h3>
+<p>By default, Angular uses a library called <a href="https://github.com/angular/angular/tree/main/packages/zone.js" target="_blank" rel="noopener">Zone.js</a> to determine when to run change detection. Zone.js "monkey-patches" (wraps) most asynchronous browser APIs, such as:</p>
+<ul>
+  <li><code>setTimeout()</code> and <code>setInterval()</code></li>
+  <li>DOM events (clicks, mouseovers, keypresses, etc.)</li>
+  <li><code>XMLHttpRequest</code> (used by HttpClient) and <code>fetch</code></li>
+  <li>Promises</li>
+</ul>
+<p>When any of these asynchronous operations complete, or an event is triggered, Zone.js notifies Angular. Angular then kicks off a change detection cycle for the entire component tree, starting from the root component and checking every component downwards.</p>
+
+<h4>The Change Detection Cycle:</h4>
+<p>During a change detection cycle, Angular performs the following for each component (unless optimized):</p>
+<ol>
+  <li>Updates input bindings for child components.</li>
+  <li>Calls lifecycle hooks like <code>ngOnChanges()</code>, <code>ngOnInit()</code> (if it's the first check), and <code>ngDoCheck()</code>.</li>
+  <li>Updates DOM interpolations (<code>{{'{'}}{{'{'}} value }}</code>) in the current component's template.</li>
+  <li>Recursively performs change detection for child components.</li>
+  <li>Calls <code>ngAfterViewInit()</code> and <code>ngAfterViewChecked()</code> (and their content equivalents).</li>
+</ol>
+<p>This default strategy (often called "dirty checking" or <code>CheckAlways</code>) is convenient because it automatically reacts to most common ways data can change. However, for large applications, running change detection for the entire tree too frequently can lead to performance issues.</p>
+
+<hr>
+<h3>Optimizing Change Detection with <code>OnPush</code></h3>
+<p>To improve performance, especially in larger applications, Angular provides the <code>ChangeDetectionStrategy.OnPush</code> strategy. When a component uses <code>OnPush</code>, Angular will only run change detection for that component and its subtree if one of the following conditions is met:</p>
+<ul>
+  <li><strong>An <code>@Input()</code> property of the component receives a new reference.</strong> Mutating an existing input object/array will NOT trigger change detection for an <code>OnPush</code> component.</li>
+  <li><strong>An event handler (e.g., click, submit) in the component or one of its children is triggered.</strong> Angular still runs change detection for the component path after an event.</li>
+  <li><strong>An Observable linked to the template via the <code>async</code> pipe emits a new value.</strong> The <code>async</code> pipe internally calls <code>markForCheck()</code>.</li>
+  <li><strong>Change detection is explicitly triggered by calling <code>ChangeDetectorRef.detectChanges()</code> or <code>ChangeDetectorRef.markForCheck()</code>.</strong></li>
+</ul>
+
+<h4>Setting <code>OnPush</code> Strategy:</h4>
+<pre><code>
+import {{ '{' }} Component, ChangeDetectionStrategy } from '@angular/core';
+
+@Component({{ '{' }}
+  selector: 'app-on-push-example',
+  standalone: true,
+  template: `&lt;p&gt;OnPush Component. Message: {{'{'}}{{'{'}} data.message }}&lt;/p&gt;`,
+  changeDetection: ChangeDetectionStrategy.OnPush // Set the strategy here
+})
+export class OnPushExampleComponent {{ '{' }}
+  @Input() data: {{ '{' }} message: string };
+}
+</code></pre>
+<p>Using <code>OnPush</code> significantly reduces the number of components Angular has to check during each change detection cycle, as it can skip entire subtrees if their inputs haven't changed by reference.</p>
+
+<hr>
+<h3>Immutable Data Structures and <code>OnPush</code></h3>
+<p><code>ChangeDetectionStrategy.OnPush</code> works best with immutable data structures. Immutability means that once an object or array is created, it cannot be changed. If you need to modify it, you create a new object or array with the changes, rather than mutating the original.</p>
+<h4>Why Immutability Matters for <code>OnPush</code>:</h4>
+<ul>
+  <li><strong>Reference Checks:</strong> <code>OnPush</code> components rely on reference changes for their <code>@Input()</code> properties. If you pass an object and mutate one of its properties, the reference to the object itself doesn't change, so Angular won't detect a change on an <code>OnPush</code> component.</li>
+  <li><strong>Predictability:</strong> Immutable data makes it easier to track changes and understand how state evolves over time.</li>
+  <li><strong>Performance:</strong> Comparing object references is much faster than deep-comparing object properties.</li>
+</ul>
+<h4>Example: Updating an Input for an <code>OnPush</code> Component</h4>
+<pre><code>
+// Parent Component
+// this.user = {{ '{' }} name: 'Alice', age: 30 }; // Initial user object
+
+// Incorrect way (mutating):
+// this.user.age = 31; // OnPush child component will NOT update
+
+// Correct way (creating a new object - new reference):
+// this.user = {{ '{' }} ...this.user, age: 31 }; // OnPush child component WILL update
+
+// For arrays:
+// this.items = ['a', 'b'];
+
+// Incorrect way (mutating):
+// this.items.push('c'); // OnPush child component will NOT update if it receives 'items' as input
+
+// Correct way (creating a new array):
+// this.items = [...this.items, 'c']; // OnPush child component WILL update
+</code></pre>
+<p>Libraries like Immer or Immutable.js can help manage immutable state, but even using spread syntax for objects (<code>{{'{'}}...obj}</code>) and array methods that return new arrays (<code>.map()</code>, <code>.filter()</code>, spread syntax <code>[...arr]</code>) is a good practice.</p>
+
+<hr>
+<h3>Manually Triggering Change Detection</h3>
+<p>Sometimes, you might need to tell Angular explicitly to run change detection, especially when working with <code>OnPush</code> components or when changes happen outside of Angular's zone (e.g., from a third-party library that Angular doesn't patch).</p>
+<p>You can inject <code>ChangeDetectorRef</code> into your component:</p>
+<pre><code>
+import {{ '{' }} Component, ChangeDetectionStrategy, ChangeDetectorRef, Input } from '@angular/core';
+
+@Component({{ '{' }}
+  selector: 'app-manual-cd-example',
+  standalone: true,
+  template: `&lt;p&gt;Value: {{'{'}}{{'{'}} value }}&lt;/p&gt;`,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class ManualCdExampleComponent {{ '{' }}
+  @Input() value: number = 0;
+
+  constructor(private cdr: ChangeDetectorRef) {{ '{' }} }
+
+  updateValueProgrammatically(newValue: number) {{ '{' }}
+    // Imagine this method is called by a non-Angular async operation
+    this.value = newValue;
+    // If this component were OnPush and the input reference didn't change,
+    // or if 'value' was an internal property changed outside Angular's zone,
+    // the view might not update without manual intervention.
+  }
+
+  // Option 1: Run change detection for this component and its children.
+  forceDetectChanges() {{ '{' }}
+    this.updateValueProgrammatically(Math.random());
+    this.cdr.detectChanges(); // Runs CD for this component and its subtree. Use sparingly.
+  }
+
+  // Option 2: Mark this component and its ancestors as dirty, to be checked in the next CD cycle.
+  forceMarkForCheck() {{ '{' }}
+    this.updateValueProgrammatically(Math.random());
+    this.cdr.markForCheck(); // Marks the path from this component to root as needing check.
+                           // Relies on the next CD cycle (triggered by Zone.js or manually).
+  }
+}
+</code></pre>
+<h4><code>detectChanges()</code> vs <code>markForCheck()</code>:</h4>
+<ul>
+  <li><strong><code>detectChanges()</code>:</strong> Runs change detection for the current component and its children immediately. It does not check ancestors. Use this if you are sure the change is isolated to this component's subtree. Can be heavy if overused.</li>
+  <li><strong><code>markForCheck()</code>:</strong> Marks the component and all its ancestors as "dirty" (needing a check). It does <em>not</em> schedule or run change detection itself. Instead, it ensures that when the next change detection cycle runs (either triggered by Zone.js or an explicit call to <code>ApplicationRef.tick()</code> or <code>detectChanges()</code> on a parent/root), this component will be checked, even if it's <code>OnPush</code> and its inputs haven't changed reference. This is generally safer and more efficient than <code>detectChanges()</code> for <code>OnPush</code> components.</li>
+</ul>
+<p>Understanding these concepts allows you to build highly performant Angular applications by taking control of how and when change detection runs.</p>

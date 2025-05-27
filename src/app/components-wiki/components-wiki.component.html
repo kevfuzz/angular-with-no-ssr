@@ -1,0 +1,229 @@
+<h2>Angular Components & Templates</h2>
+<p>This section covers the core concepts of Angular components, templates, inputs, outputs, lifecycle hooks, and content projection.</p>
+
+<h3>Component Basics</h3>
+<p>An Angular component consists of a TypeScript class, an HTML template, and CSS styles.</p>
+<h4>Example: Basic Component</h4>
+<pre><code>
+// basic-example.component.ts
+import {{ '{' }} Component } from '@angular/core';
+
+@Component({{ '{' }}
+  selector: 'app-basic-example',
+  standalone: true,
+  imports: [], // CommonModule if using ngIf, ngFor, etc.
+  template: \`
+    &lt;h3&gt;{{'{'}}{{'{'}} title }}&lt;/h3&gt;
+    &lt;p&gt;This is a basic Angular component.&lt;/p&gt;
+  \`,
+  styles: [\`h3 { color: steelblue; }\`]
+})
+export class BasicExampleComponent {{ '{' }}
+  title = 'My Basic Component';
+}
+</code></pre>
+<p>To use this component, you would add <code>&lt;app-basic-example&gt;&lt;/app-basic-example&gt;</code> to another component's template, provided <code>BasicExampleComponent</code> is imported if the host is standalone.</p>
+
+<h3>Input Properties (@Input())</h3>
+<p>The <code>@Input()</code> decorator allows a parent component to pass data to a child component.</p>
+<h4>Example: Child Component with Input</h4>
+<pre><code>
+// child-with-input.component.ts
+import {{ '{' }} Component, Input } from '@angular/core';
+
+@Component({{ '{' }}
+  selector: 'app-child-with-input',
+  standalone: true,
+  template: \`
+    &lt;p&gt;Message from parent: {{'{'}}{{'{'}} message }}&lt;/p&gt;
+  \`
+})
+export class ChildWithInputComponent {{ '{' }}
+  @Input() message: string = ''; // Default value
+}
+
+// parent.component.ts (Conceptual)
+// @Component({{ '{' }}
+//   selector: 'app-parent',
+//   standalone: true,
+//   imports: [ChildWithInputComponent],
+//   template: \`
+//     &lt;h2&gt;Parent Component&lt;/h2&gt;
+//     &lt;app-child-with-input [message]="parentMessage"&gt;&lt;/app-child-with-input&gt;
+//   \`
+// })
+// export class ParentComponent {{ '{' }}
+//  parentMessage = 'Hello from Parent!';
+// }
+</code></pre>
+
+<hr>
+<h3>Output Properties (@Output() and EventEmitter)</h3>
+<p>The <code>@Output()</code> decorator allows a child component to emit events up to its parent component. It's used in conjunction with <code>EventEmitter</code>.</p>
+<h4>Example: Child Component Emitting an Event</h4>
+<pre><code>
+// child-emitter.component.ts
+import {{ '{' }} Component, Output, EventEmitter } from '@angular/core';
+
+@Component({{ '{' }}
+  selector: 'app-child-emitter',
+  standalone: true,
+  template: \`
+    &lt;button (click)="notifyParent()"&gt;Notify Parent&lt;/button&gt;
+  \`
+})
+export class ChildEmitterComponent {{ '{' }}
+  @Output() customEvent = new EventEmitter&lt;string&gt;();
+
+  notifyParent() {{ '{' }}
+    this.customEvent.emit('Hello from child!');
+  }
+}
+
+// parent-listener.component.ts (Conceptual)
+// @Component({{ '{' }}
+//   selector: 'app-parent-listener',
+//   standalone: true,
+//   imports: [ChildEmitterComponent],
+//   template: \`
+//     &lt;h2&gt;Parent Listener&lt;/h2&gt;
+//     &lt;p&gt;Message from child: {{'{'}}{{'{'}} childMessage }}&lt;/p&gt;
+//     &lt;app-child-emitter (customEvent)="onCustomEvent($event)"&gt;&lt;/app-child-emitter&gt;
+//   \`
+// })
+// export class ParentListenerComponent {{ '{' }}
+//  childMessage: string = '';
+//  onCustomEvent(message: string) {{ '{' }}
+//    this.childMessage = message;
+//    console.log('Event from child:', message);
+//  }
+// }
+</code></pre>
+
+<hr>
+<h3>Component Lifecycle Hooks</h3>
+<p>Angular components have a lifecycle managed by Angular. You can tap into key moments in this lifecycle by implementing lifecycle hook methods.</p>
+<h4>Common Lifecycle Hooks:</h4>
+<ul>
+  <li><strong>ngOnInit():</strong> Called once, after the first <code>ngOnChanges()</code>. Used for component initialization, data fetching.</li>
+  <li><strong>ngOnChanges():</strong> Called before <code>ngOnInit()</code> and whenever one or more data-bound input properties change. Receives a <code>SimpleChanges</code> object.</li>
+  <li><strong>ngOnDestroy():</strong> Called just before Angular destroys the component. Used for cleanup, unsubscribing from observables.</li>
+</ul>
+<h4>Example: Using Lifecycle Hooks</h4>
+<pre><code>
+// lifecycle-example.component.ts
+import {{ '{' }} Component, OnInit, OnChanges, OnDestroy, Input, SimpleChanges } from '@angular/core';
+
+@Component({{ '{' }}
+  selector: 'app-lifecycle-example',
+  standalone: true,
+  template: \`&lt;p&gt;Lifecycle example. Check console. Input: {{'{'}}{{'{'}} myInput }}&lt;/p&gt;\`
+})
+export class LifecycleExampleComponent implements OnInit, OnChanges, OnDestroy {{ '{' }}
+  @Input() myInput: string = '';
+  private intervalId: any;
+
+  constructor() {{ '{' }}
+    console.log('Lifecycle: Constructor called');
+  }
+
+  ngOnChanges(changes: SimpleChanges) {{ '{' }}
+    console.log('Lifecycle: ngOnChanges called', changes);
+  }
+
+  ngOnInit() {{ '{' }}
+    console.log('Lifecycle: ngOnInit called');
+    this.intervalId = setInterval(() => {{ '{' }}
+      console.log('Lifecycle: Interval running');
+    }, 2000);
+  }
+
+  ngOnDestroy() {{ '{' }}
+    console.log('Lifecycle: ngOnDestroy called');
+    if (this.intervalId) {{ '{' }}
+      clearInterval(this.intervalId);
+    }
+  }
+}
+</code></pre>
+
+<hr>
+<h3>Content Projection (ng-content)</h3>
+<p>Content projection allows you to create components that can host content passed in from a parent component. This is achieved using the <code>&lt;ng-content&gt;</code> element.</p>
+<h4>Example: Basic Content Projection</h4>
+<pre><code>
+// content-wrapper.component.ts
+import {{ '{' }} Component } from '@angular/core';
+
+@Component({{ '{' }}
+  selector: 'app-content-wrapper',
+  standalone: true,
+  template: \`
+    &lt;div style="border: 1px solid #ccc; padding: 10px;"&gt;
+      &lt;h4&gt;Wrapper Title&lt;/h4&gt;
+      &lt;ng-content&gt;&lt;/ng-content&gt; &lt;!-- Content from parent will be projected here --&gt;
+      &lt;p&gt;Wrapper Footer&lt;/p&gt;
+    &lt;/div&gt;
+  \`
+})
+export class ContentWrapperComponent {{ '{' }} }
+
+// parent-projector.component.ts (Conceptual)
+// @Component({{ '{' }}
+//   selector: 'app-parent-projector',
+//   standalone: true,
+//   imports: [ContentWrapperComponent],
+//   template: \`
+//     &lt;h2&gt;Parent Projector&lt;/h2&gt;
+//     &lt;app-content-wrapper&gt;
+//       &lt;p&gt;This paragraph is projected from the parent!&lt;/p&gt;
+//       &lt;em&gt;And this emphasized text too.&lt;/em&gt;
+//     &lt;/app-content-wrapper&gt;
+//   \`
+// })
+// export class ParentProjectorComponent {{ '{' }} }
+</code></pre>
+<h4>Multi-slot Content Projection (with <code>select</code> attribute)</h4>
+<pre><code>
+// multi-slot-wrapper.component.ts
+import {{ '{' }} Component } from '@angular/core';
+
+@Component({{ '{' }}
+  selector: 'app-multi-slot-wrapper',
+  standalone: true,
+  template: \`
+    &lt;div style="border: 1px solid lightcoral; padding: 10px;"&gt;
+      &lt;h4&gt;Multi-Slot Wrapper&lt;/h4&gt;
+      &lt;div class="header"&gt;
+        &lt;ng-content select="[slot=header]"&gt;&lt;/ng-content&gt; &lt;!-- Project content with slot='header' attribute --&gt;
+      &lt;/div&gt;
+      &lt;hr&gt;
+      &lt;ng-content&gt;&lt;/ng-content&gt; &lt;!-- Default slot for content without a slot attribute --&gt;
+      &lt;hr&gt;
+      &lt;div class="footer"&gt;
+        &lt;ng-content select=".footer-content"&gt;&lt;/ng-content&gt; &lt;!-- Project content with class 'footer-content' --&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  \`
+})
+export class MultiSlotWrapperComponent {{ '{' }} }
+
+// parent-multi-projector.component.ts (Conceptual)
+// @Component({{ '{' }}
+//   selector: 'app-parent-multi-projector',
+//   standalone: true,
+//   imports: [MultiSlotWrapperComponent],
+//   template: \`
+//     &lt;h2&gt;Parent Multi-Projector&lt;/h2&gt;
+//     &lt;app-multi-slot-wrapper&gt;
+//       &lt;h5 slot="header"&gt;This is the projected HEADING&lt;/h5&gt;
+//       &lt;p&gt;This is default projected content.&lt;/p&gt;
+//       &lt;div class="footer-content"&gt;
+//         &lt;em&gt;This is projected into the footer via class selector.&lt;/em&gt;
+//       &lt;/div&gt;
+//       &lt;p slot="header"&gt;Another header piece.&lt;/p&gt; &lt;!-- Will also go to header slot --&gt;
+//     &lt;/app-multi-slot-wrapper&gt;
+//   \`
+// })
+// export class ParentMultiProjectorComponent {{ '{' }} }
+</code></pre>
