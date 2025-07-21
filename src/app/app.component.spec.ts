@@ -20,10 +20,10 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('angular-with-no-ssr');
   });
 
-  it('should render title', () => {
+  it('should render the high low game component', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, angular-with-no-ssr');
+    expect(compiled.querySelector('app-high-low-game')).not.toBeNull();
   });
 });
