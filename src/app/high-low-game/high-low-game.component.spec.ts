@@ -24,6 +24,7 @@ describe('HighLowGameComponent', () => {
   it('should display default instructions', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h2')?.textContent).toContain('High-Low Equation Game');
+
     expect(compiled.textContent).toContain('Use the operations to make 1 or 21');
   });
 
@@ -34,5 +35,6 @@ describe('HighLowGameComponent', () => {
     component.op2 = '-';
     component.evaluate();
     expect(component.chips).not.toBe(100);
+
   });
 });

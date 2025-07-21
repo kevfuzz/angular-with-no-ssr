@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './high-low-game.component.scss'
 })
 export class HighLowGameComponent {
+
   chips = 100;
   bet = 10;
   cards: number[] = [];
@@ -64,5 +65,6 @@ export class HighLowGameComponent {
 
   private randomCard(): number {
     return Math.floor(Math.random() * 10) + 1;
+
   }
 }
