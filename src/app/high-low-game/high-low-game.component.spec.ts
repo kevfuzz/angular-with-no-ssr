@@ -24,6 +24,17 @@ describe('HighLowGameComponent', () => {
   it('should display default instructions', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h2')?.textContent).toContain('High-Low Equation Game');
-    expect(compiled.querySelector('p')?.textContent).toContain('Guess the number');
+
+    expect(compiled.textContent).toContain('Use the operations to make 1 or 21');
+  });
+
+  it('should adjust chips after playing a hand', () => {
+    component.bet = 5;
+    component.cards = [1, 1, 1];
+    component.op1 = '+';
+    component.op2 = '-';
+    component.evaluate();
+    expect(component.chips).not.toBe(100);
+
   });
 });

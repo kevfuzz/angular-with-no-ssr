@@ -10,33 +10,61 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './high-low-game.component.scss'
 })
 export class HighLowGameComponent {
-  targetNumber = this.getRandomNumber(1, 100);
-  guess: number | null = null;
-  message = '';
-  guessCount = 0;
 
-  checkGuess(): void {
-    if (this.guess === null || isNaN(this.guess)) {
+  chips = 100;
+  bet = 10;
+  cards: number[] = [];
+  op1 = '+';
+  op2 = '+';
+  message = '';
+
+  constructor() {
+    this.dealCards();
+  }
+
+  dealCards(): void {
+    this.cards = [this.randomCard(), this.randomCard(), this.randomCard()];
+    this.message = '';
+  }
+
+  evaluate(): void {
+    if (this.bet <= 0 || this.bet > this.chips) {
+      this.message = 'Invalid bet.';
       return;
     }
-    this.guessCount++;
-    if (this.guess < this.targetNumber) {
-      this.message = 'Too low!';
-    } else if (this.guess > this.targetNumber) {
-      this.message = 'Too high!';
+    const result = this.calculate();
+    const equation = `${this.cards[0]} ${this.op1} ${this.cards[1]} ${this.op2} ${this.cards[2]} = ${result}`;
+    if (result === 1 || result === 21) {
+      this.chips += this.bet;
+      this.message = `You win! ${equation}`;
     } else {
-      this.message = `Correct! You solved it in ${this.guessCount} attempts.`;
+      this.chips -= this.bet;
+      this.message = `You lose. ${equation}`;
     }
   }
 
-  resetGame(): void {
-    this.targetNumber = this.getRandomNumber(1, 100);
-    this.guess = null;
-    this.message = '';
-    this.guessCount = 0;
+  private calculate(): number {
+    const first = this.applyOp(this.cards[0], this.cards[1], this.op1);
+    return this.applyOp(first, this.cards[2], this.op2);
   }
 
-  private getRandomNumber(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  private applyOp(a: number, b: number, op: string): number {
+    switch (op) {
+      case '+':
+        return a + b;
+      case '-':
+        return a - b;
+      case '*':
+        return a * b;
+      case '/':
+        return b !== 0 ? a / b : NaN;
+      default:
+        return NaN;
+    }
+  }
+
+  private randomCard(): number {
+    return Math.floor(Math.random() * 10) + 1;
+
   }
 }

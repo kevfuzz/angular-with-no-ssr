@@ -1,20 +1,39 @@
 <div class="game">
   <h2>High-Low Equation Game</h2>
-  <p>Guess the number between 1 and 100.</p>
 
-  <form (ngSubmit)="checkGuess()" *ngIf="!message.startsWith('Correct')">
-    <input
-      type="number"
-      [(ngModel)]="guess"
-      name="guess"
-      min="1"
-      max="100"
-      required
-    />
-    <button type="submit">Check</button>
-  </form>
+  <p>Use the operations to make 1 or 21.</p>
+
+  <p>Chips: {{ chips }}</p>
+
+  <div class="controls">
+    <label>
+      Bet:
+      <input type="number" [(ngModel)]="bet" min="1" [max]="chips" />
+    </label>
+
+    <div class="cards">
+      <span *ngFor="let c of cards" class="card">{{ c }}</span>
+    </div>
+
+    <div class="ops">
+      <select [(ngModel)]="op1" name="op1">
+        <option>+</option>
+        <option>-</option>
+        <option>*</option>
+        <option>/</option>
+      </select>
+      <select [(ngModel)]="op2" name="op2">
+        <option>+</option>
+        <option>-</option>
+        <option>*</option>
+        <option>/</option>
+      </select>
+    </div>
+
+    <button type="button" (click)="evaluate()">Play Hand</button>
+    <button type="button" (click)="dealCards()">Deal New Cards</button>
+  </div>
 
   <p class="message">{{ message }}</p>
 
-  <button type="button" (click)="resetGame()" *ngIf="message">Reset</button>
 </div>
