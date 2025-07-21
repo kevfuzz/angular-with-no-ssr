@@ -1,0 +1,20 @@
+<div class="game">
+  <h2>High-Low Equation Game</h2>
+  <p>Guess the number between 1 and 100.</p>
+
+  <form (ngSubmit)="checkGuess()" *ngIf="!message.startsWith('Correct')">
+    <input
+      type="number"
+      [(ngModel)]="guess"
+      name="guess"
+      min="1"
+      max="100"
+      required
+    />
+    <button type="submit">Check</button>
+  </form>
+
+  <p class="message">{{ message }}</p>
+
+  <button type="button" (click)="resetGame()" *ngIf="message">Reset</button>
+</div>
